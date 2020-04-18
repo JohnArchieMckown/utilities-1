@@ -1,0 +1,1 @@
+ IMPORT CODE,'isgquery.dll','ISGQUERY'                                          

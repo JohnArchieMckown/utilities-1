@@ -1,0 +1,112 @@
+opercmd(1)               John McKown at HealthMarkets               opercmd(1)
+
+
+
+NAME
+       opercmd - Write data sent to a process via the z/OS operator START,
+       MODIFY, and STOP commands.
+
+SYNOPSIS
+          opercmd
+          opercmd -v
+          opercmd -h
+          opercmd -i[n]
+          opercmd -w
+
+Availability
+       This command is specific to z/OS.
+
+DESCRIPTION
+       The opercmd writes information sent to a process via the z/OS operator
+       START, MODIFY, or STOP commands. The information is written to stdout.
+       The -i should be done before any other option (or no option). This will
+       initialize the interface and allow the operator to use the MODIFY
+       command. If the operator does a MODIFY before an opercmd -i is done,
+       z/OS will reject the MODIFY command with a message. The opercmd -i also
+       write the data on the START command, if there is any, to stdout. The
+       optional n must be a number and specifies the number of MODIFY commands
+       which can be queued. It must be in the range 0 to 255. It defaults to 1
+       if not specified. A value of 0 will disable the use of the MODIFY z/OS
+       operator command. However, the STOP command will still be queued.
+
+       The opercmd command, with no option specified, will return immediately
+       with 0 or more lines written to stdout. The data written will be from
+       any MODIFY commands which have been issued since the last time the
+       opercmd was executed.
+
+       The opercmd with the -w option will wait for up to n seconds for a
+       MODIFY or STOP command. If one or more of those is already queued, it
+       will write the data to stdout. It will return with a exit code of 1 if
+       a STOP command has been issued. It will return with an exit code of 2
+       if an error occurs. It will return with an exit code of 0 in all other
+       cases.
+
+       Once a z/OS STOP command has been recognized by this command, the
+       command set the MODIFY limit to 0 so that more MODIFY commands will be
+       rejected by z/OS and will continue to return with an exit code of 2.
+
+       The code is written so that there is no way to restart operator
+       communications after a z/OS operator issues the STOP command. Of
+       course, since you likely have the source, this can be changed.
+
+OPTIONS
+       -v version - print the current version (1.0.0)
+
+       -h display help and exit.
+
+       -in
+          Initialize the address space to properly receive z/OS console
+          operator commands: START, MODIFY, STOP.  The n is an optional number
+          to initialize the maximum of queued MODIFY commands the operator can
+          issue without getting an error message. The default is 1.
+
+          The -i option should only be done only once, as the first issuance
+          of the opercmd command.  However subsequent use of the -i will not
+          cause any problems. It will simply be ignored and an exit code of 1
+          returned.
+
+          The command will write the START parameters, if any, specified on
+          the START command to stdout.
+
+          If some problem is encounter which makes it impossible to set up the
+          operator communication interface, an exit code of 2 will be
+          returned.
+
+       -wn
+          The -w option will wait up to n seconds for a MODIFY or STOP
+          command.  When a MODIFY command is issued to the process (or has
+          already been issued but not processed), the data portion will be
+          return on stdout and the exit code will be set to 0.
+
+          When a STOP command is or has been issued to the process, nothing
+          will be returned on stdout, and an exit code of 1 will be returned.
+
+          If some sort of error occurs, an exit code of 2 will be returned.
+
+          If n is not specified, or is zero, the command will wait "forever".
+           And I do mean forever. You cannot control C out of the command.  A
+          z/OS operator cancel will work. A UNIX "kill -TERM" command from
+          another session might work.
+
+SEE ALSO
+EXAMPLES
+NOTES
+       Due to the way that z/OS does operator command processing, it is
+       critically important that this command run in the same physical address
+       space as the invoking command, which I will guess would normally be the
+       shell. The only way that I know to do this is to run it with the
+       _BPX_SHAREAS environment variable set to MUST. E.g.
+        export _BPX_SHAREAS=MUST
+
+AUTHORS
+       John McKown
+
+
+          Author.
+
+COPYRIGHT
+       Copyright B) 2013, HealthMarkets, Inc.
+
+
+
+z/OS UNIX Utilites from          January, 2013                      opercmd(1)

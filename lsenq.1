@@ -1,0 +1,68 @@
+lsenq(1)                                                     z/OS UNIX Utilities from HealthMarkets                                                     lsenq(1)
+
+
+
+NAME
+       lsenq - list ENQ information
+
+SYNOPSIS
+       lsenq [-t [field-separator]] [-d] [qname] rname
+
+DESCRIPTION
+       lists the ENQ information for all the enqueues which match the specified QNAME and RNAME on the command line.
+
+
+OPTIONS
+       -t [field-separator]
+
+          use the given character(s) as the field separator. Defaults to a tab.
+
+       -d
+
+          output debugging information to stderr.
+
+       -o
+
+          encode non-printable bytes with octal escapes.
+
+       -h
+
+          encode non-printable bytes with hexadecimal escapes.
+
+EXIT STATUS
+        =0 The command has completed successfully.
+        !=0 The return code from the ISGQUERY request.
+        In this case, a message will be written to stderr containing the return and reason code from ISGQUERY.
+
+NOTES
+       If there is only one argument:
+
+       ·  It is assumed to be the RNAME.
+
+       ·  The QNAME is assumed to be SYSDSN.
+
+       ·  The value is converted to upper case since data set names are usually in upper case.
+
+EXAMPLES
+   List ENQs on a specific DSN
+       lsenq isp.sisppenu
+
+
+   list ENQs on a data set name which contains lower case characters
+       lsenq SYSDSN DSN.WITH.lower.case.IN.IT
+
+
+   list ENQs on a pattern RNAME with a specific QNAME
+       lsenq SYSIKJUA TSH*
+
+SEE ALSO
+AUTHORS
+       John McKown
+
+
+COPYRIGHT
+       Copyright © 2012 HealthMarkets
+
+
+
+John McKown                                                                  January, 2012                                                                 lsenq(1)

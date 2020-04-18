@@ -1,0 +1,39 @@
+lsdasd(1)                                                             John McKown at HealthMarkets                                                            lsdasd(1)
+
+
+
+NAME
+       lsdasd - list the device number and space on all on-line disk volumes.
+
+SYNOPSIS
+          lsdasd
+
+
+DESCRIPTION
+       The lsdasd command lists the volser, address, and space information on all on-line DASD volumes.
+
+EXAMPLES
+       lsdasd
+
+
+       VOLSER  Addr    SMS Indicator   Extents Total Cylinders Total Tracks    Largest Extent in Cylinders     Largest Extent in Tracks        Cylinders on Device       Tracks Per Cylinder     Track Size
+       I13RS1  0X2000  NONSMS          2       181             2721            154                             2312                            3339                      15                      58786 
+       MVSSP3  0X2001  NONSMS          0       0               0               0                               0                               3340                      15                      58786
+       LIHTSE  0X2002  NONSMS          27      1055            15898           434                             6511                            3340                      15                      58786 
+       LIHTS5  0X2003  NONSMS          50      0               183             0                               12                              3340                      15                      58786 
+       SAPP03  0X2004  NONSMS          1       330             4950            330                             4950                            3340                      15                      58786 
+       HSM019  0X2005  NONSMS          76      1720            26296           732                             10999                           3340                      15                      58786
+       HSM020  0X2006  NONSMS          95      2209            33714           1556                            23349                           3340                      15                      58786
+       HSM021  0X2007  NONSMS          70      1921            29262           635                             9540                            3340                      15                      58786
+       LOG001  0X2008  SMS             5       3135            47031           3036                            45540                           3339                      15                      58786
+
+AUTHORS
+       John McKown
+          Author.
+
+COPYRIGHT
+       Copyright © 2012, HealthMarkets, Inc.
+
+
+
+z/OS UNIX Utilites from                                                       March, 2012                                                                     lsdasd(1)

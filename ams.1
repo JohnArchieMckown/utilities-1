@@ -1,0 +1,49 @@
+ams(1)                                                                John McKown at HealthMarkets                                                               ams(1)
+
+
+
+NAME
+       ams - Invoke batch IDCAMS, redirecting input from stdin and output to stdout.
+
+SYNOPSIS
+          ams
+
+
+DESCRIPTION
+       The ams command attaches the IDCAMS program with a parameter list which invokes an input routine to get its input and an output routine to print its output.
+
+       The input routine reads stdin (file descriptor 0). It sends individual lines delimited by an NEL character (0x15) as separate input records (with the NEL
+       removed), to be processed by IDCAMS.
+
+       The output routine receives the output which normally goes to SYSPRINT. This routine adds an NEL (0x15) to the end of the line and writes it to stdout (file
+       descriptor 1).
+
+FILES
+       ams
+        does not use any input or output files.
+
+EXAMPLES
+   Local z/OS Examples
+       ams
+          Reads from the user's terminal and write to it.
+
+       ams <input.file
+          Uses redirection of stdin to read its commands from input.file.  Output goes to the user's terminal.
+
+       ams <input.file >output.file
+          Uses redirection of stdin to read its commands from input.file and redirection of stdout to write its output to output.file.
+
+       cat input.file1 input.file2 | ams
+          Uses redirection of stdin from a pipe to read its commands from the catenation of files input.file1 and input.file2.
+
+SEE ALSO
+AUTHORS
+       John McKown
+          Author.
+
+COPYRIGHT
+       Copyright © 2012, HealthMarkets, Inc.
+
+
+
+z/OS UNIX Utilites from                                                       March, 2012                                                                        ams(1)

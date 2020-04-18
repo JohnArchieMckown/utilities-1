@@ -1,0 +1,69 @@
+*PROCESS ALIGN,NOCOMPAT,DXREF,FLAG(ALIGN,CONT,RECORD)
+*PROCESS NOFOLD,NOINFO,PC(ON,DATA,GEN,MCALL),RENT,
+*PROCESS RA2,NORLD,MXREF,RXREF,USING(MAP,WARN(13))
+*PROCESS TYPECHECK(MAGNITUDE,REGISTER)
+*WARNING - THIS PROGRAM REQUIRES THE HIGH-LEVEL ASSEMBLER
+*          AS WELL AS LE/370
+*          THIS PROGRAM IS RE-ENTRANT.
+         PUSH  PRINT
+         PRINT NOGEN
+         IEABRCX DEFINE
+         IEABRCX DISABLE
+         IEABRCX ENABLE
+_BALR    OPSYN BALR
+BALR     OPSYN BASR
+         POP   PRINT
+         MNOTE *,'SYSOPT_OPTABLE=&SYSOPT_OPTABLE'
+         SYSSTATE ASCENV=P,
+               AMODE64=NO,
+               ARCHLVL=2
+ARGS     CEEENTRY PPA=ARGS_PPA,
+               MAIN=YES,
+               AUTO=DSASIZE,
+               BASE=R11_32
+         USING CEECAA,R12_32
+         USING CEEDSA,R13_32
+         J     GO
+GOBACK   DS    0H
+         CEETERM RC=RETURN_CODE,
+               MODIFIER=MODIFIER,
+               MF=(E,CEETERM_BLOCK)
+GO       DS    0H
+         LR    R10_32,R1_32       SAVE R1 UPON ENTRY
+         USING PARMS,R10_32
+         LM    R3_32,R5_32,@ARGC
+         XC    RETURN_CODE,RETURN_CODE
+         XC    MODIFIER,MODIFIER
+         LTR   R3_32,R3_32
+         JZ    GOBACK
+         LR    R9_32,R3_32       SAVE
+         J     GOBACK
+         LTORG *
+ARGS_PPA CEEPPA LIBRARY=NO,
+               PPA2=YES,
+               EXTPROC=YES,
+               TSTAMP=YES,
+               PEP=YES,
+               INSTOP=YES,
+               EXITDSA=NO,
+               OWNEXM=YES,
+               EPNAME=ARGS,
+               VER=1,
+               REL=1,
+               MOD=0,
+               DSA=YES
+         CEEDSA
+* DYNAMIC AREA IS DEFINED HERE.
+* THIS IS WITHIN A DSECT, SO NO DATA IS REALLY INITIALIZED
+         DS    0D                 FORCE DOUBLEWORD
+RETURN_CODE DS F
+MODIFIER DS    F
+STORAGE@ DS    A
+         regs
+         BPXYERNO LIST=YES
+PARMS    DSECT
+@ARGC    DS    A                  ADDRESS OF NUMBER OF ARGUMENTS
+@ARGVL   DS    A                  ADDRESS OF VECTOR OF LENGTH OF ARGS
+@ARGV    DS    A                  ADDRESS OF VECTOR OF ARGS
+@OPTSTR  DS    A                  ADDRESS OF OPTION STRING
+         END   ARGS

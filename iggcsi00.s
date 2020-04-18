@@ -1,0 +1,89 @@
+*PROCESS ALIGN,NOCOMPAT,DXREF,FLAG(ALIGN,CONT,RECORD)
+*PROCESS NOFOLD,NOINFO,PC(ON,DATA,GEN,MCALL),RENT,
+*PROCESS RA2,NORLD,MXREF(FULL),RXREF,USING(MAP,WARN(13))
+*PROCESS TYPECHECK(NOMAGNITUDE,REGISTER),XREF(FULL)
+*WARNING - THIS PROGRAM REQUIRES THE HIGH-LEVEL ASSEMBLER
+*          AS WELL AS LE/370
+*          THIS PROGRAM IS RE-ENTRANT.
+         PUSH  PRINT
+         PRINT NOGEN
+&NL      SETC  BYTE(21)
+&TAB     SETC  BYTE(05)
+&NULL    SETC  BYTE(00)
+         IEABRCX DEFINE
+*        IEABRCX DISABLE
+         IEABRCX ENABLE
+_BALR    OPSYN BALR
+BALR     OPSYN BASR
+         POP   PRINT
+         SYSSTATE ASCENV=P,
+               AMODE64=NO,
+               ARCHLVL=2
+IGGCSI00 CEEENTRY PPA=IGGCSI00_PPA,
+               MAIN=YES,
+               EXPORT=YES,
+               AUTO=DSASIZE,
+               BASE=R11_32
+IGGCSI00 ALIAS C'iggcsi00'
+         USING CEECAA,R12_32
+         USING CEEDSA,R13_32
+         J     GO
+GOBACK   DS    0H
+         CEETERM RC=RETURN_CODE,
+               MF=(E,CEETERM_BLOCK)
+GO       DS    0H
+         LR    R10_32,R1_32       SAVE R1 UPON ENTRY
+         USING PARMS,R10_32
+RET0     DS    0H
+         XC    RETURN_CODE,RETURN_CODE
+         XC    MODIFIER,MODIFIER
+         J     GOBACK
+DUMP     DS    0H
+         ST    R14_32,@DUMPRET
+         LA    R1_32,CALLX
+         L     R15_32,CEE3DMP
+         CALL  (15),
+               (TITLE,OPTIONS,FC),
+               VL,
+               MF=(E,(1))
+         L     R14_32,@DUMPRET
+         BR    R14_32
+CEE3DMP  DC    V(CEE3DMP)
+TOHEX    DC    C'0123456789ABCDEF'
+TAB      DC    X'05'
+NL       DC    X'15'
+TITLE    DC    CL80'IGGCSI00 DUMP'
+OPTIONS  DC    CL255'BLOCKS,STORAGE,REGST(256),GENOPTS'
+         LTORG *
+IGGCSI00_PPA CEEPPA LIBRARY=NO,
+               PPA2=YES,
+               EXTPROC=YES,
+               TSTAMP=YES,
+               PEP=YES,
+               INSTOP=YES,
+               EXITDSA=NO,
+               OWNEXM=YES,
+               EPNAME=IGGCSI00,
+               VER=1,
+               REL=1,
+               MOD=0,
+               DSA=YES
+         CEEDSA
+* DYNAMIC AREA IS DEFINED HERE.
+* THIS IS WITHIN A DSECT, SO NO DATA IS REALLY INITIALIZED
+         DS    0D                 FORCE DOUBLEWORD
+RETURN_CODE DS F
+MODIFIER DS    F
+RETURN_VALUE DC A(0)               PREVIOUS DEFAULT DUB
+REASON_CODE DC A(0)
+CEETERM_BLOCK CEETERM MF=L
+CALLX    DS    30F
+FC       DS    3F
+DSASIZE  EQU   *-CEEDSA
+         BPXYCONS DSECT=YES,LIST=YES
+         BPXYERNO LIST=YES
+         BPXYIOV
+         CEECAA
+PARMS    DSECT
+         regs
+         END   IGGCSI00

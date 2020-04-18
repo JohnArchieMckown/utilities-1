@@ -1,0 +1,1 @@
+ IMPORT CODE,'DLL-template.dll','dlltemplate'                                    IMPORT DATA,'DLL-template.dll','DllInt'                                         IMPORT DATA,'DLL-template.dll','DllStr'                                        

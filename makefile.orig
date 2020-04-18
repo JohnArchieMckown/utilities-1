@@ -1,0 +1,295 @@
+# The name of the z/OS PDS to receive the pax.Z file
+DIST = "//UNIX.SOURCE(UTILPAXZ)"
+# The z/Architecture machine level. ZS-3 is for relative+immediate+long displacement,
+# all of which are used in the code. This means this will not run on a anything less
+# than a z9.
+MACHINE=ZSERIES-3
+MACROS = LT FINDUCBP
+ALLFILES=makefile
+SCRIPTS_SRC= mkjcl.sh mkdsn.rexx rmdsn.rexx
+SCRIPTS=$(SCRIPTS_SRC:b)
+ALLFILES+=$(SCRIPTS_SRC) $(SCRIPTS)
+FILES =  FINDUCBP UCBSCANP REGS PRNTABLE iefbr14.jcl
+ALLFILES+=$(FILES)
+APF = ams uaudit mgcre mcsoper
+DLLS = DLL-template.dll isgquery.dll finducbs.dll lspace.dll lvtoc.dll ucbscan.dll prdasd.dll
+ALLFILES+=$(DLLS)
+DLL_SIDE_FILES += $(DLLS:dll=x)
+ALLFILES+=$(DLL_SIDE_FILES)
+PROGRAMS = lsenq subjob ftee  deblock rmjes flowdrvr unixlog opercmd
+ALLFILES+=$(PROGRAMS)
+SUBROUTINES = storgrup$O
+ALLFILES+=$(SUBROUTINES)
+MANFILE1=$(PROGRAMS:b:+".man1") $(PROGRAMS:b:+".cat1")#$(PROGRAMS:b:^"man/man1/":+".1") $(PROGRAMS:b:^"man/cat1/":+".1")
+ALLFILES+=$(MANFILE1)
+MANFILE3=$(SUBROUTINES:b:+".man3") $(SUBROUTINES:b:+".cat3")#$(PROGRAMS:b:^"man/man3/":+".3") $(PROGRAMS:b:^"man/cat3/":+".3")
+ALLFILES+=$(MANFILE3)
+SPECPGMS = lsdasd
+#ALLFILES+=$(SPECPGMS)
+TEMPLATES = SKELETON.rexx SKELETON.s SKELETON.sh SKELETON.pl SKELETON.awk
+ALLFILES+=$(TEMPLATES)
+PREFIX=/usr/local
+BINDIR=$(PREFIX)/bin
+MANDIR=$(PREFIX)/man
+DLLDIR=$(PREFIX)/lib
+LD_LIBS += -L .
+LD_LIBS += -l utilities-1
+LD_LIBS += -l "//'CEE.SCEELKED'"
+LD_LIBS += -l "//'SYS1.CSSLIB'"
+LD_DLL = -b DYNAM\(DLL\),CASE\(MIXED\),RENT,REUS
+LD_OPTS += $(LDFLAGS)
+LD_ARGS +=
+AS=as
+LD=ld
+#AS_LIBS += -I /home/tsh009/source/maclib
+#S_LIBS = -I TSH009.SOURCE.MACLIB
+AS_LIBS += -I .
+AS_LIBS += -I HLA.SASMMAC2
+AS_LIBS += -I HLA.SASMMAC1
+AS_LIBS += -I CEE.SCEEMAC
+#AS_LIBS += -I SYS3.TDF.V1R1M0.SAMPLIB.LIHT
+AS_OPTS += --gadata --gdwarf3 -mGOFF
+AS_DLL += -mGOFF
+AS_LIST += -a=$*.lst
+PREREQ.lsenq = 'finducbs.x'
+.SUFFIXES: .s .o .a
+all : dll $(SUBROUTINES) $(PROGRAMS)  $(SCRIPTS) $(SPECPGMS)
+	touch all
+$(MACROS): ; # Don't need to do anything for macros.
+%.o : %.c
+	@echo making $@ from $&
+# The following .man? and .cat? create the templates
+# for the various man files.
+# The suffix 1..9 are for the various sections:
+# 1 - commands
+# 2 - system calls (supplied by z/UNIX) - not for users
+# 3 - Library calls (for subroutines supplied in libraries)
+# 4 - Special files (such as configuration files)
+# 5 - file formats and conventions
+# 6 - Games
+# 7 - Miscellaneous (such as macros, copybooks)
+# 8 - System Admin Commands
+# 9 - Kernel Routines
+#
+# Of course, this system does not supply all of these.
+# I only put all of them in for completeness.
+%.man1 .PRECIOUS :
+	test ! -e man/man1/$*.1
+	cd man/man1;\
+	sed -E 's/template/$*/g' SKELETON.1 | sed -E 's/TEMPLATE/$*/g' >$*.1;\
+	cd -;\
+	ln -s man/man1/$*.1 $@
+%.man2 .PRECIOUS :
+	test ! -e man/man2/$*.2
+	cd man/man2;\
+	sed -E 's/template/$*/g' SKELETON.2 | sed -E 's/TEMPLATE/$*/g' >$*.2;\
+	cd -;\
+	ln -s man/man2/$*.2 $@
+%.man3 .PRECIOUS :
+	test ! -e man/man3/$*.3
+	cd man/man3;\
+	sed -E 's/template/$*/g' SKELETON.3 | sed -E 's/TEMPLATE/$*/g' >$*.3;\
+	cd -;\
+	ln -s man/man3/$*.3 $@
+%.man4 .PRECIOUS :
+	test ! -e man/man4/$*.4
+	cd man/man4;\
+	sed -E 's/template/$*/g' SKELETON.4 | sed -E 's/TEMPLATE/$*/g' >$*.4;\
+	cd -;\
+	ln -s man/man4/$*.4 $@
+%.man5 .PRECIOUS :
+	test ! -e man/man5/$*.5
+	cd man/man5;\
+	sed -E 's/template/$*/g' SKELETON.5 | sed -E 's/TEMPLATE/$*/g' >$*.5;\
+	cd -;\
+	ln -s man/man5/$*.5 $@
+%.man6 .PRECIOUS :
+	test ! -e man/man6/$*.6
+	cd man/man6;\
+	sed -E 's/template/$*/g' SKELETON.6 | sed -E 's/TEMPLATE/$*/g' >$*.6;\
+	cd -;\
+	ln -s man/man6/$*.6 $@
+%.man7 .PRECIOUS :
+	test ! -e man/man7/$*.7
+	cd man/man7;\
+	sed -E 's/template/$*/g' SKELETON.7 | sed -E 's/TEMPLATE/$*/g' >$*.7;\
+	cd -;\
+	ln -s man/man7/$*.7 $@
+%.man8 .PRECIOUS :
+	test ! -e man/man8/$*.8
+	cd man/man8;\
+	sed -E 's/template/$*/g' SKELETON.8 | sed -E 's/TEMPLATE/$*/g' >$*.8;\
+	cd -;\
+	ln -s man/man8/$*.1 $@
+%.man9 .PRECIOUS :
+	test ! -e man/man9/$*.9
+	cd man/man9;\
+	sed -E 's/template/$*/g' SKELETON.9 | sed -E 's/TEMPLATE/$*/g' >$*.9;\
+	cd -;\
+	ln -s man/man9/$*.9 $@
+%.cat1 : %.man1
+	test ! -e $@
+	touch -r $& man/cat1/$*.1
+	ln -s man/cat1/$*.1 $@
+	touch -r $& $@
+%.cat2 : %.man2
+	test ! -e $@
+	touch -r $& man/cat2/$*.2
+	ln -s man/cat2/$*.2 $@
+	touch -r $& $@
+%.cat3 : %.man3
+	test ! -e $@
+	touch -r $& man/cat3/$*.3
+	ln -s man/cat3/$*.3 $@
+	touch -r $& $@
+%.cat4 : %.man4
+	test ! -e $@
+	touch -r $& man/cat4/$*.4
+	ln -s man/cat4/$*.4 $@
+	touch -r $& $@
+%.cat5 : %.man5
+	test ! -e $@
+	touch -r $& man/cat5/$*.5
+	ln -s man/cat5/$*.5 $@
+	touch -r $& $@
+%.cat6 : %.man6
+	test ! -e $@
+	touch -r $& man/cat6/$*.6
+	ln -s man/cat6/$*.6 $@
+	touch -r $& $@
+%.cat7 : %.man7
+	test ! -e $@
+	touch -r $& man/cat7/$*.7
+	ln -s man/cat7/$*.7 $@
+	touch -r $& $@
+%.cat8 : %.man8
+	test ! -e $@
+	touch -r $& man/cat8/$*.8
+	ln -s man/cat8/$*.8 $@
+	touch -r $& $@
+%.cat9 : %.man9
+	test ! -e $@
+	touch -r $& man/cat9/$*.9
+	ln -s man/cat9/$*.9 $@
+	touch -r $& $@
+man : $(MANFILE1) $(MANFILE2)
+	for i in 1 2 3 4 5 6 7 8 9;do \
+	  cd man/man$$i ; \
+	  for j in *.$$i;do \
+              touch -rf $$j ../cat$$i/$$j; \
+	  done ; \
+	 cd - ; \
+	done
+	touch man
+scripts : $(SCRIPTS)
+	touch scripts
+% : %.rexx
+	echo 'rule %.%rexx: making $@ from $<'
+	cp -v $< $@
+	chmod 755 $@
+% : %.pl
+	echo 'rule %.%pl: making $@ from $<'
+	cp -v $< $@
+	chmod 755 $@
+% : %.awk
+	echo 'rule %.%awk: making $@ from $<'
+	cp -v $< $@
+	chmod 755 $@
+% : %.sh
+	echo 'rule %.%sh: making $@ from $<'
+	cp -v $< $@
+	chmod 755 $@
+% : %.o
+	@echo 'rule bubba %.%o: making $@ from $<'
+	test $@ = $% && $(LD) $(LD_LIBS) $(LD_OPTS) $(LD_DLL)  -o $@ $@.o $(DLL_SIDE_FILES) $(SUBROUTINES) $(LD_ARGS) >>$*.listing
+#.a .LIBRARY .precious :
+#	echo '%.a .LIBRARY .precious rule: making $@ from $&'
+#	$(AR) $(ARFLAGS) $@ $*$O
+%$O : %.s
+	echo '$O:%.s rule: making $@ from $<'
+	$(AS) $(AS_LIST) $(AS_OPTS) $(AS_LIBS) --"MACHINE($(MACHINE)),EXIT(INX(FLOWASM),LBX(FLOWASM),PRX(FLOWASM))" $<
+%.x : %$O
+	echo '$.x : %$O rule for $@ using $<'
+	$(LD) $(LD_LIBS) $(LD_OPTS) $(LD_DLL) -x $@ $< $(LD_ARGS)
+	-rm a.out
+$(DLLS) : $$*$O
+	echo '$$(DLLS) : $$*$O rule: making $@ from $<'
+	$(LD) $(LD_LIBS) $(LD_OPTS) $(LD_DLL) -x $*.x -o $@ $< $(LD_ARGS)
+dll	: $(DLLS)
+	echo 'making DLLs'
+	touch dll
+$(SUBROUTINES) : $$*.s
+	echo '$(SUBROUTINES) : $$*.s rule: making $@ from $<'
+	$(AS) $(AS_LIST) $(AS_OPTS) $(AS_LIBS) --"MACHINE($(MACHINE)),EXIT(INX(FLOWASM),LBX(FLOWASM),PRX(FLOWASM))" $<
+	$(AR) $(ARFLAGS) libutilities-1.a $*$O
+mvUl : mvUl.o
+	echo "mvUl : mvUl.o rule: making $@ from $<"
+	$(LD) $(LD_LIBS) $(LD_OPTS)  -o $@ $<  $(LD_ARGS)
+	@test -e mvlU && rm mvlU || /bin/true
+	ln -f mvUl mvlU
+lsvtoc : lsdasd ;
+lsdasd : $$*$O
+	echo "lsdasd rule: making $@ from $<"
+	$(LD) $(LD_LIBS) $(LD_OPTS) $(LD_DLL)  -o $@ $< $(DLL_SIDE_FILES) $(LD_ARGS)
+	test -e lsvtoc && rm lsvtoc
+	ln -f lsdasd lsvtoc
+$(PROGRAMS) : $$*$O
+	echo "\$$(PROGRAMS) : rule: making $@ from $<"
+	$(LD) $(LD_LIBS) $(LD_OPTS) $(LD_DLL)  -o $@ $< $(DLL_SIDE_FILES) $(LD_ARGS)
+$(APF) : $$*$O libutilities-1.a
+	echo '\$$(APF) rule: making $@ from $<'
+	$(LD) $(LD_LIBS) $(LD_OPTS) $(LD_DLL) -b 'AC=1' -o $@ $< $(DLL_SIDE_FILES) $(SUBROUTINES) $(LD_ARGS)
+	extattr -s +ap $@
+libutilities-1.a .precious :	$(SUBROUTINES)
+	echo 'utilities-1.a rule: making $$@ from $<'
+	echo '\$$(SUBROUTINES)'
+	$(AR) $(ARFLAGS) $@ $<
+	#rm -rf $&
+clean :
+	rm -f *$O *.ad *.dbg *.lst CEEDUMP.* $(PROGRAMS) $(SPECPGMS) $(SCRIPTS)
+backup : dist
+[
+	cd ..;pax -wvzf utilities-1.$$(isodate).pax.Z utilities-1
+	touch backup
+]
+dist_1 : $(ALLFILES)
+	pax -wvzf utilities-1.pax.Z *.s $(PROGRAMS:b:+".s") $(SPECPGMS:b:+".s") $(APF:b:+".s") $(FILES) $(TEMPLATES) \
+	$(SCRIPTS) $(SCRIPTS_SRC) $(SUBROUTINES:b:+".s") $(DLLS:b:+".s")  makefile man $(MANFILE1) $(MANFILE2)
+	touch dist_1
+dist: dist_1 $(APF) $(PROGRAMS) makefile $(DLLS)
+	cp -vB utilities-1.pax.Z $(DIST)
+	touch dist
+ascii : $(FILES) $(TEMPLATES) $(MANFILE1) $(MANFILE2) $(SCRIPTS) $(SCRIPTS_SRC) $(APF:b:+".s") $(PROGRAMS:b:+".s")
+[
+	@echo 'ascii rule'
+	pax -ofrom=ibm-1047,to=iso8859-1 -wvzf utilities-1.ascii.pax.Z *.s *.listing makefile man \
+	$(FILES) $(TEMPLATES) $(MANFILE1) $(MANFILE2) $(SCRIPTS) $(SCRIPTS_SRC) &&
+	touch ascii
+]
+force : clean all
+install :
+[
+cat <<EOF | su -
+	cd $(PWD)
+	cp -vp $(PROGRAMS) $(APF) $(SPECPGMS) $(SCRIPTS) $(BINDIR)
+	cp -vp $(DLLS) $(DLLDIR)
+	cp -vp man/man1/*.1 $(MANDIR)/man1
+	cp -vp man/cat1/*.1 $(MANDIR)/cat1
+	cp -vp man/man2/*.2 $(MANDIR)/man2
+	cp -vp man/cat2/*.2 $(MANDIR)/cat2
+	cp -vp man/man3/*.3 $(MANDIR)/man3
+	cp -vp man/cat3/*.3 $(MANDIR)/cat3
+	cp -vp man/man4/*.4 $(MANDIR)/man4
+	cp -vp man/cat4/*.4 $(MANDIR)/cat4
+	cp -vp man/man5/*.5 $(MANDIR)/man5
+	cp -vp man/cat5/*.5 $(MANDIR)/cat5
+	cp -vp man/man6/*.6 $(MANDIR)/man6
+	cp -vp man/cat6/*.6 $(MANDIR)/cat6
+	cp -vp man/man7/*.7 $(MANDIR)/man7
+	cp -vp man/cat7/*.7 $(MANDIR)/cat7
+	cp -vp man/man8/*.8 $(MANDIR)/man8
+	cp -vp man/cat8/*.8 $(MANDIR)/cat8
+	cp -vp man/man9/*.9 $(MANDIR)/man9
+	cp -vp man/cat9/*.9 $(MANDIR)/cat9
+EOF
+]

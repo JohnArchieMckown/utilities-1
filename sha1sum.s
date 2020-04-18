@@ -1,0 +1,208 @@
+*PROCESS ALIGN,NOCOMPAT,DXREF,FLAG(ALIGN,CONT,RECORD)
+*PROCESS NOFOLD,NOINFO,PC(ON,DATA,GEN,MCALL),RENT,
+*PROCESS RA2,NORLD,MXREF(FULL),RXREF,USING(MAP,WARN(13))
+*PROCESS TYPECHECK(NOMAGNITUDE,REGISTER),XREF(FULL)
+*WARNING - THIS PROGRAM REQUIRES THE HIGH-LEVEL ASSEMBLER
+*          AS WELL AS LE/370
+*          THIS PROGRAM IS RE-ENTRANT.
+         PUSH  PRINT
+         PRINT NOGEN
+&NL      SETC  BYTE(21)
+&TAB     SETC  BYTE(05)
+&NULL    SETC  BYTE(00)
+         IEABRCX DEFINE
+*        IEABRCX DISABLE
+         IEABRCX ENABLE
+_BALR    OPSYN BALR
+BALR     OPSYN BASR
+         POP   PRINT
+         SYSSTATE ASCENV=P,
+               AMODE64=NO,
+               ARCHLVL=2
+SHA1SUM CEEENTRY PPA=SHA1SUM_PPA,
+               MAIN=YES,
+               AUTO=DSASIZE,
+               BASE=R11_32
+SHA1SUM ALIAS C'SHA1SUM'
+         USING CEECAA,R12_32
+         USING CEEDSA,R13_32
+         J     GO
+GOBACK   DS    0H
+         LT    R1_32,IOV@
+         JZ    NOFREE
+         LT    R0_32,IOVL
+         JZ    NOFREE
+         STORAGE RELEASE,
+               LENGTH=(0),
+               ADDR=(1)
+NOFREE   DS    0H
+         CEETERM RC=RETURN_CODE,
+               MF=(E,CEETERM_BLOCK)
+GO       DS    0H
+         LR    R10_32,R1_32       SAVE R1 UPON ENTRY
+         USING PARMS,R10_32
+         LA    R1_32,CALLX
+         L     R15_32,CEE3INF
+         CALL  (15),(SYS,ENV,MEMBER,GPID,FC),VL,
+               MF=(E,(1))
+         TM    SYS,X'02'          UNIX?
+         JNO   GOBACK             NO
+         XC    IOV@,IOV@
+         XC    IOVL,IOVL
+         L     R9_32,@ARGC        POINTER TO NUMBER OF PARMS
+         L     R9_32,0(,R9_32)    NUMBER OF PARMS
+         CHI   R9_32,2            ANY PARMS
+         JL    RET0               NO. OK, NO OUTPUT.
+         L     R8_32,@ARGVL       PARM LENGTH
+         L     R7_32,@ARGV        PARM VALUE
+         LA    R8_32,4(,R8_32)    SKIP FIRST PARM
+         LA    R7_32,4(,R8_32)    DITTO
+FILELOOP DS    0H
+ L R6_32,0(,R8_32) LENGTH OF FILE NAME
+ L R5_32,0(,R7_32) ADDR OF FILE NAME
+ LA R1_32,CALLX
+ L  R15_32,BPX1OPN
+ CALL (15),(0(R7_32), FILE NAME LENGTH
+            (R5_32),  FILE NAME
+            OPTIONS,
+            MODE,
+            RETVAL,
+            RETCODE,
+            RSNCODE),MF=(E,(1))
+ LT R4_32,RETVAL                  FETCH FD
+ JM ERROR1     OOPS - NEGATIVE
+ ST R4_32,FD
+READLP   DS    0H
+EOF      DS    0H
+         L     R15_32,BPX1CLO
+         LA    R1_32,CALLX
+         CALL  (15),(FD,
+               RETVAL,
+               RETCODE,
+               RSNCODE),MF=(E,(1))
+RET0     DS    0H
+         XC    RETURN_CODE,RETURN_CODE
+         XC    MODIFIER,MODIFIER
+         J     GOBACK
+NOTUNIX  DS    0H
+         ABEND 1,,STEP,REASON=1
+         J     GOBACK
+DUMP     DS    0H
+         ST    R14_32,@DUMPRET
+         LA    R1_32,CALLX
+         L     R15_32,CEE3DMP
+         CALL  (15),
+               (TITLE,OPTIONS,FC),
+               VL,
+               MF=(E,(1))
+         L     R14_32,@DUMPRET
+         BR    R14_32
+*CALL    CEEPCALL ,(0,0,0,0),VL,MF=L
+STDIN    DC    F'0'
+STDOUT   DC    F'1'
+STDERR   DC    F'2'
+ALET     DC    A(0)
+H0  DC  A(X'67452301')
+H1  DC  A(X'EFCDAB89')
+H2  DC  A(X'98BADCFE')
+H3  DC  A(X'10325476')
+H4  DC  A(X'C3D2E1F0')
+IOV_ALET EQU   ALET
+IOV_BUFFER_ALET EQU ALET
+CEE3INF  DC    V(CEE3INF)
+SPRINTF  DC    V(SPRINTF)
+CEE3DMP  DC    V(CEE3DMP)
+TOHEX    DC    C'0123456789ABCDEF'
+TITLE    DC    CL80'SHA1SUM DUMP'
+OPTIONS  DC    CL255'BLOCKS,STORAGE,REGST(256),GENOPTS'
+TOUPPER  DC    256AL1(*-TOUPPER)
+         ORG   TOUPPER+X'81'
+         DC    C'ABCDEFGHI'
+         ORG   TOUPPER+X'91'
+         DC    C'JKLMNOPQR'
+         ORG   TOUPPER+X'A2'
+         DC    C'STUVWXYZ'
+         ORG
+         LTORG *
+SHA1SUM_PPA CEEPPA LIBRARY=NO,
+               PPA2=YES,
+               EXTPROC=YES,
+               TSTAMP=YES,
+               PEP=YES,
+               INSTOP=YES,
+               EXITDSA=NO,
+               OWNEXM=YES,
+               EPNAME=SHA1SUM,
+               VER=1,
+               REL=1,
+               MOD=0,
+               DSA=YES
+         CEEDSA
+* DYNAMIC AREA IS DEFINED HERE.
+* THIS IS WITHIN A DSECT, SO NO DATA IS REALLY INITIALIZED
+         DS    0D                 FORCE DOUBLEWORD
+@DUMPRET DS    A
+IOV@     DS    A                  IOV STRUCTURE ADDRESS
+IOVL     DS    F                  IOV STRUCTURE SIZE IN BYTES
+FD       DS    F                  FILE DESCRIPTOR
+COUNT    DS    F
+BUFFERA  DS    A
+RETVAL   DS    A(0)
+RETCODE  DS    A(0)
+RSNCODE  DS    A(0)
+SYS      DS    F
+* BIT MEANING
+*    0 X'80'
+*    CURRENTLY EXECUTING IN THE CICS ENVIRONMENT
+*    1 X'40'
+*    CURRENTLY EXECUTING IN A CICS_PIPI ENVIRONMENT
+*    2-3 X'30'
+*    RESERVED FOR OTHER SPECIFIC CICS ENVIRONMENTS
+*    4 X'10'
+*    CURRENTLY EXECUTING IN A TSO ENVIRONMENT
+*    5 X'08'
+*    CURRENTLY EXECUTING IN A BATCH ENVIRONMENT
+*    6 X'04'
+*    CURRENTLY EXECUTING IN A Z/OS UNIX ENVIRONMENT
+*    7-28
+*    RESERVED FOR FUTURE USE
+*    29
+*    CURRENTLY EXECUTING ON Z/VSE(TM)
+*    30
+*    CURRENTLY EXECUTING ON Z/OS
+*    31
+*    PREVIOUSLY INDICATED AS EXECUTING ON Z/OS.E
+*
+ENV      DS    F
+*
+MEMBER   DS    F
+*
+GPID     DS    F
+FC       DS    3F
+BUFL     DS    F
+RETURN_CODE DS F
+MODIFIER DS    F
+RETURN_VALUE DC A(0)               PREVIOUS DEFAULT DUB
+REASON_CODE DC A(0)
+CEETERM_BLOCK CEETERM MF=L
+CALLX    DS    30F
+IOV_COUNT DS   F
+IOV_STRUC DS   0D
+         DS    (10*8)A            ROOM FOR 10 ADDRESS / LENGTH PAIRS
+IOV_STRUC_L EQU *-IOV_STRUC
+IOV_STRUC_N EQU IOV_STRUC_L/8
+MSGAREA  DS    CL(20+L'MSGFMT1)
+DSASIZE  EQU   *-CEEDSA
+         BPXYCONS DSECT=YES,LIST=YES
+         BPXYERNO LIST=YES
+         BPXYIOV
+         CEECAA
+PARMS    DSECT
+@ARGC    DS    A                  ADDRESS OF NUMBER OF ARGUMENTS
+@ARGVL   DS    A                  ADDRESS OF VECTOR OF LENGTH OF ARGS
+@ARGV    DS    A                  ADDRESS OF VECTOR OF ARGS
+@ENVL    DS    A                  ADDRESS OF NUMBER OF ENV VARS
+@ENVVL   DS    A                  ADDRESS OF VECTOR OF LENGTH OF ENV VA
+@ENV     DS    A                  ADDRESS OF VECTOR OF ENV VARS
+         regs
+         END   SHA1SUM

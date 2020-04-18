@@ -1,0 +1,10 @@
+*.o binary
+*.a binary
+*.ad binary
+*.dbg binary
+*.gz binary
+*.bz2 binary
+*.Z binary
+*.tar binary
+*.pax binary
+

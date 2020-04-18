@@ -1,0 +1,123 @@
+.\"     Title: opercmd
+.\"    Author: John McKown
+.\"      Date: 2013-01-24T13:20:00+06:00
+.\"
+.TH "opercmd" "1" "January, 2013" "z/OS UNIX Utilites from" "John McKown at HealthMarkets"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+opercmd \- Write data sent to a process via the z/OS operator START, MODIFY, and STOP commands.
+.SH "SYNOPSIS"
+.sp
+.RS 3n
+.nf
+\fBopercmd\fR
+\fBopercmd\fR \fB-v\fR
+\fBopercmd\fR \fB-h\fR
+\fBopercmd\fR \fB-i\fR\fI[n]\fR
+\fBopercmd\fR \fB-w\fR
+.fi
+.RE
+.SH "Availability"
+This command is specific to z/OS.
+.RE
+.SH "DESCRIPTION"
+.PP
+The
+\fBopercmd\fR
+writes information sent to a process via the z/OS operator \fBSTART\fR,
+\fBMODIFY\fR, or \fBSTOP\fR commands. The information is written to stdout. The
+\fB-i\fR should be done before any other option (or no option). This will
+initialize the interface and allow the operator to use the \fBMODIFY\fR command.
+If the operator does a \fBMODIFY\fR before an \fIopercmd -i\fR is done, z/OS
+will reject the \fBMODIFY\fR command with a message. The \fIopercmd -i\fR also
+write the data on the \fBSTART\fR command, if there is any, to stdout. The
+optional \fIn\fR must be a number and specifies the number of \fBMODIFY\fR
+commands which can be queued. It must be in the range 0 to 255. It defaults to 1
+if not specified. A value of 0 will disable the use of the \fBMODIFY\fR z/OS
+operator command. However, the \fBSTOP\fR command will still be queued.
+.sp
+The \fBopercmd\fR command, with no option specified, will return immediately
+with 0 or more lines written to stdout. The data written will be from any
+\fBMODIFY\fR commands which have been issued since the last time the
+\fBopercmd\fR was executed.
+.sp
+The \fBopercmd\fR with the \fI-w\fR option will wait for up to \fIn\fR seconds
+for a \fBMODIFY\fR or \fBSTOP\fR command. If one or more of those is already
+queued, it will write the data to stdout. It will return with a exit code of 1
+if a \fBSTOP\fR command has been issued. It will return with an exit code of 2
+if an error occurs. It will return with an exit code of 0 in all other cases.
+.sp
+Once a z/OS \fBSTOP\fR command has been recognized by this command, the command
+set the MODIFY limit to 0 so that more \fBMODIFY\fR commands will be rejected by
+z/OS and will continue to return with an exit code of 2.
+.sp
+The code is written so that there is no way to restart operator communications
+after a z/OS operator issues the \fBSTOP\fR command. Of course, since you likely
+have the source, this can be changed.
+.PP
+.sp
+.RE
+.SH "OPTIONS"
+.TP 3n
+\fB\-v\fR
+version - print the current version (1.0.0)
+.TP 3n
+\fB\-h\fR
+display help and exit.
+.TP 3n
+\fB\-i\fR\fIn\fR
+Initialize the address space to properly receive z/OS console operator commands:
+\fBSTART\fR, \fBMODIFY\fR, \fBSTOP\fR.  The \fIn\fR is an optional number to
+initialize the maximum of queued \fBMODIFY\fR commands the operator can issue
+without getting an error message. The default is 1.
+.sp
+The \fB-i\fR option should only be done only once, as the first issuance of the
+opercmd command.  However subsequent use of the \fB-i\fR will not cause any
+problems. It will simply be ignored and an exit code of 1 returned.
+.sp
+The command will write the \fRSTART\fR parameters, if any, specified on the
+\fBSTART\fR command to stdout.
+.sp
+If some problem is encounter which makes it impossible to set up the operator
+communication interface, an exit code of 2 will be returned.
+.TP 3n
+\fB\-w\fR\fIn\fR The -w option will wait up to \fIn\fR seconds for a
+\fBMODIFY\fR or \fBSTOP\fR command.  When a \fBMODIFY\fR command is issued to
+the process (or has already been issued but not processed), the data portion
+will be return on stdout and the exit code will be set to 0.
+.sp
+When a \fBSTOP\fR command is or has been issued to the process, nothing will be
+returned on stdout, and an exit code of 1 will be returned.
+.sp
+If some sort of error occurs, an exit code of 2 will be returned.
+.sp
+If \fIn\fR is not specified, or is zero, the command will wait "forever".  \fB
+And I do mean forever. You cannot control C out of the command.  A z/OS operator
+cancel will work. A UNIX "kill -TERM" command from another session might
+work.\fR
+.SH "SEE ALSO"
+.PP
+.SH "EXAMPLES"
+.RE
+.SH "NOTES"
+Due to the way that z/OS does operator command processing, it is critically
+important that this command run in the same physical address space as the
+invoking command, which I will guess would normally be the shell. The only way
+that I know to do this is to run it with the _BPX_SHAREAS environment variable
+set to MUST. E.g.
+ export _BPX_SHAREAS=MUST
+.RE
+.SH "AUTHORS"
+.PP
+\fBJohn\fR \fBMcKown\fR
+.sp -1n
+.IP "" 3n
+.PP
+.sp -1n
+.IP "" 3n
+Author.
+.SH "COPYRIGHT"
+Copyright \(co 2013, HealthMarkets, Inc.

@@ -1,0 +1,59 @@
+As for invoking a DLL from Assembler, here's some snippets from
+code in that course:
+
+LOAD   alias c'dllload'
+QUERYF alias c'dllqueryfn'
+QUERYV alias c'dllqueryvar
+.
+.
+.
+
+* Load DLL load module CDLL12
+*
+CALL LOAD,(DLL_NAME),MF=(E,GENCALL)
+.
+.
+.
+* Locate DLL function CDSUB4; if successful, call the function
+*
+         l     2,dll_tok
+         CALL  QUERYF,((2),F2_NAME),MF=(E,GENCALL)
+         st    15,f2_ptr
+         c     15,f0
+         be    outa_here
+         CALL  (15),(STRING),MF=(E,GENCALL)
+.
+.
+.
+* Locate DLL variable data_area; if successful, change it
+         l    2,dll_tok
+         CALL QUERYV,((2),VAR_NAME),MF=(E,GENCALL)
+         st   15,v_ptr
+         c    15,f0
+         be   outa_here
+         mvc  0(l'new_str+1,15),new_str - change value
+.
+.
+.
+GENCALL  CALL ,(,,,),MF=L
+
+dll_tok  ds   f
+
+dll_name dc   c'CDLL12'
+          dc   x'00'
+
+f2_name  dc   c'CDSUB4'
+          dc   x'00'
+
+var_name dc   c'data_area'
+          dc   x'00'
+
+string   dc   c'Data from me'
+          dc   x'00'
+
+new_str  dc   c'funny little string'
+          dc   x'00'
+
+
+:wq
+
